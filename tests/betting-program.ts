@@ -1,16 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
+import { Program, AnchorError } from "@coral-xyz/anchor";
 import { BettingProgram } from "../target/types/betting_program";
+import * as sb from "@switchboard-xyz/on-demand";
+import { PublicKey, SystemProgram, Connection } from "@solana/web3.js";
+import { assert } from "chai";
+import { confirmTransaction } from "@solana-developers/helpers";
 
-describe("betting-program", () => {
-  // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
+const provider = anchor.AnchorProvider.env();
+anchor.setProvider(provider);
+const payer = anchor.Wallet.local().payer;
 
-  const program = anchor.workspace.BettingProgram as Program<BettingProgram>;
-
-  it("Is initialized!", async () => {
-    // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
-  });
-});
+const program = anchor.workspace.BettingProgram as Program<BettingProgram>;
