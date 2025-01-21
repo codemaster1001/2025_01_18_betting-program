@@ -24,6 +24,7 @@ pub fn set_winning_outcome_handler(
     market.status = MarketStatus::Confirmed;
 
     market.winning_outcome = Some(winning_outcome);
+
     Ok(())
 }
 

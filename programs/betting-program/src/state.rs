@@ -96,16 +96,6 @@ impl Bet {
         + 50; // buffer
 }
 
-#[account]
-pub struct Treasury {
-    pub is_initialized: bool,
-    pub amount: u64,
-    pub bump: u8,
-}
-impl Treasury {
-    pub const MAX_SIZE: usize = 1 + 8 + 1;
-}
-
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
 pub enum MarketStatus {
     Opened,

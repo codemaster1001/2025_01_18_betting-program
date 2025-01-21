@@ -11,7 +11,6 @@ use anchor_lang::prelude::*;
 
 pub fn claim_reward_handler(ctx: Context<ClaimReward>) -> Result<()> {
     let market = &ctx.accounts.market;
-    let treasury = &ctx.accounts.treasury;
     let bet_account = &mut ctx.accounts.bet;
 
     require!(
@@ -49,8 +48,16 @@ pub fn claim_reward_handler(ctx: Context<ClaimReward>) -> Result<()> {
         .checked_sub(service_fee)
         .ok_or(CustomError::NumericalUnderflow)?;
 
+    // Transfer the service_fee to admin
+    **market.to_account_info().try_borrow_mut_lamports()? -= service_fee;
+    **ctx
+        .accounts
+        .authority
+        .to_account_info()
+        .try_borrow_mut_lamports()? += service_fee;
+
     // Transfer the user payout
-    **treasury.to_account_info().try_borrow_mut_lamports()? -= payout_after_fee;
+    **market.to_account_info().try_borrow_mut_lamports()? -= payout_after_fee;
     **ctx
         .accounts
         .user
@@ -71,6 +78,7 @@ pub struct ClaimReward<'info> {
     pub bet: Account<'info, Bet>,
     #[account(mut)]
     pub user: Signer<'info>,
-    #[account(mut, seeds=[b"treasury"], bump=treasury.bump)]
-    pub treasury: Account<'info, Treasury>,
+    /// CHECK: admin wallt
+    #[account(mut, address = crate::admin::id())]
+    pub authority: AccountInfo<'info>,
 }

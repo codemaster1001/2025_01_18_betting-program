@@ -9,7 +9,6 @@ use anchor_lang::system_program;
 
 pub fn place_bet_handler(ctx: Context<PlaceBet>, outcome_index: u8, amount: u64) -> Result<()> {
     let market = &mut ctx.accounts.market;
-    let treasury = &mut ctx.accounts.treasury;
     let bet_account = &mut ctx.accounts.bet;
 
     // Some basic validations
@@ -41,13 +40,10 @@ pub fn place_bet_handler(ctx: Context<PlaceBet>, outcome_index: u8, amount: u64)
     // directly send to market account:
     let ix = system_program::Transfer {
         from: ctx.accounts.user.to_account_info().clone(),
-        to: treasury.to_account_info().clone(),
+        to: market.to_account_info().clone(),
     };
     let cpi_ctx = CpiContext::new(ctx.accounts.system_program.to_account_info(), ix);
     system_program::transfer(cpi_ctx, amount)?;
-
-    //update treausry amount
-    treasury.amount += amount;
 
     // Update market
     market.amounts_per_outcome[outcome_index as usize] += amount;
@@ -72,8 +68,6 @@ pub fn place_bet_handler(ctx: Context<PlaceBet>, outcome_index: u8, amount: u64)
 pub struct PlaceBet<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
-    #[account(mut, seeds=[b"treasury"], bump=treasury.bump)]
-    pub treasury: Account<'info, Treasury>,
     #[account(
         init_if_needed,
         payer = user,

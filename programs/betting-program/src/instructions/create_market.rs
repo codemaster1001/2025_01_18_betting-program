@@ -56,13 +56,6 @@ pub fn create_market_handler(ctx: Context<CreateMarket>, args: CreateMarketArgs)
     // Market is Open
     market.status = MarketStatus::Opened;
 
-    if ctx.accounts.treasury.is_initialized == false {
-        //Initialize the treasury account
-        ctx.accounts.treasury.is_initialized = true;
-        ctx.accounts.treasury.bump = ctx.bumps.treasury;
-        ctx.accounts.treasury.amount = 0;
-    }
-
     Ok(())
 }
 
@@ -77,14 +70,6 @@ pub struct CreateMarket<'info> {
         space = 8 + Market::MAX_SIZE
     )]
     pub market: Account<'info, Market>,
-    #[account(
-        init_if_needed,
-        payer = authority,
-        seeds = [b"treasury"],
-        bump,
-        space = 8 + Treasury::MAX_SIZE
-    )]
-    pub treasury: Account<'info, Treasury>,
     #[account(mut)]
     pub authority: Signer<'info>, // Admin who creates the market
     #[account(address = system_program::ID)]
