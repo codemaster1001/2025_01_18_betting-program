@@ -11,7 +11,7 @@ betting_program = "J5wNuWH7BezwFjAeSGvLP2FThJhPgSmAQLX7P9RixGoD"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
@@ -20,16 +20,15 @@ test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 [test]
 startup_wait = 5000
 shutdown_wait = 2000
-upgradeable = false
 
 [test.validator]
 bind_address = "0.0.0.0"
-url = "https://mainnet.helius-rpc.com/?api-key=dabb596f-4284-4464-a851-5b882c6761a0"
+url = "https://api.mainnet-beta.solana.com"
 ledger = ".anchor/test-ledger"
 rpc_port = 8899
 
 [[test.validator.clone]]
-address = "SBondMDrcV3K4kxZR1HNVT7osZxAHVHgYXL5Ze1oMUv"
+address = "Ceveqpim1FJZfx9DPeFDVDSz2HJavUqPPEJtZ2osNEmS"
 
 [[test.validator.clone]]
-address = "A43DyUGA7s8eXPxqEjJY6EBu1KKbNgfxF8h17VAHn13w"
+address = "Hg8Kz1NaG3mnzJ34nzMRwTXByLTG1wrFnW4AgMfynoFz"

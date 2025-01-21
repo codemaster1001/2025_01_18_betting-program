@@ -25,8 +25,6 @@ pub fn create_market_handler(ctx: Context<CreateMarket>, args: CreateMarketArgs)
     market.description = args.description;
     market.image_link = args.image_link;
     market.market_type = args.market_type;
-    market.token_mint_a = args.token_mint_a;
-    market.token_mint_b = args.token_mint_b;
 
     // Time windows
     market.open_time = args.open_time;
@@ -83,8 +81,6 @@ pub struct CreateMarketArgs {
     pub description: String,
     pub image_link: String,
     pub market_type: MarketType, // e.g. Hilo, TokenFight, Custom
-    pub token_mint_a: Pubkey,
-    pub token_mint_b: Pubkey,
     pub open_time: u64,
     pub close_time: u64,
     pub settle_time: u64,

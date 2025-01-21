@@ -56,6 +56,7 @@ pub fn place_bet_handler(ctx: Context<PlaceBet>, outcome_index: u8, amount: u64)
         bet_account.bettor = ctx.accounts.user.key();
         bet_account.claimed = false;
         bet_account.bump = ctx.bumps.bet;
+        bet_account.amounts_per_outcome = vec![0; market.outcomes.len()]
     }
 
     bet_account.amounts_per_outcome[outcome_index as usize] += amount;

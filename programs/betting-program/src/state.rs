@@ -11,8 +11,6 @@ pub struct Market {
     pub description: String,
     pub image_link: String,
     pub market_type: MarketType,
-    pub token_mint_a: Pubkey,
-    pub token_mint_b: Pubkey,
 
     // Time windows
     pub open_time: u64,
@@ -53,8 +51,6 @@ impl Market {
         + (4 + 500) // description (arbitrary max)
         + (4 + 100) // image_link
         + 1 // market_type enum
-        + 32 // token_mint_a
-        + 32 // token_mint_b
         + 8 // open_time
         + 8 // close_time
         + 8 // settle_time
@@ -63,10 +59,10 @@ impl Market {
         + 8 // max_bet
         + 8 // total_max_bet
         + 8 // total_bet_amount
-        + 1 + 8 // Option<u64> final_price_a_end
-        + 1 + 8 // Option<u64> final_price_b_end        
-        + 1 + 8 // Option<u64> final_price_a_settle
-        + 1 + 8 // Option<u64> final_price_b_settle
+        + 1 + 8 // Option<u64> final_price_a_ended
+        + 1 + 8 // Option<u64> final_price_b_ended        
+        + 1 + 8 // Option<u64> final_price_a_settled
+        + 1 + 8 // Option<u64> final_price_b_settled
         + (4 + MAX_OUTCOME_LEN as usize * 32) // outcomes vector overhead example (very approximate)
         + (4 + MAX_OUTCOME_LEN as usize * 8)  // amounts_per_outcome vector overhead (very approximate)
         + 1 // Option<u8> winning_outcome

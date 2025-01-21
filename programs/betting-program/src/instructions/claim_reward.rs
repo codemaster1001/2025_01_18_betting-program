@@ -74,7 +74,7 @@ pub fn claim_reward_handler(ctx: Context<ClaimReward>) -> Result<()> {
 pub struct ClaimReward<'info> {
     #[account(mut)]
     pub market: Account<'info, Market>,
-    #[account(mut, seeds = [b"bet", user.key().as_ref(), market.key().as_ref()], bump = bet.bump, close = user)]
+    #[account(mut, seeds = [b"bet", user.key().as_ref(), market.key().as_ref()], bump = bet.bump)]
     pub bet: Account<'info, Bet>,
     #[account(mut)]
     pub user: Signer<'info>,

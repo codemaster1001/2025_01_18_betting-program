@@ -51,8 +51,4 @@ pub struct CloseMarket<'info> {
     pub feed1: Option<AccountInfo<'info>>,
     ///CHECK: feed1
     pub feed2: Option<AccountInfo<'info>>,
-    // #[account(zero)]
-    // pub feed1: AccountLoader<'info, PullFeedAccountData>,
-    // #[account(zero)]
-    // pub feed2: AccountLoader<'info, PullFeedAccountData>,
 }
