@@ -2,6 +2,9 @@ use crate::errors::*;
 use crate::state::*;
 use anchor_lang::prelude::*;
 
+// -------------------------------------------------------------
+//    SET WINNING OUTCOME (ONLY ADMIN)
+// -------------------------------------------------------------
 pub fn set_winning_outcome_handler(
     ctx: Context<SetWinningOutcome>,
     winning_outcome: u8,

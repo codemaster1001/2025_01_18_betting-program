@@ -30,4 +30,6 @@ pub enum CustomError {
     NumericalUnderflow,
     #[msg("Outcome len greater than 10")]
     OutcomeLenExceeded,
+    #[msg("Can't read price from Oracle")]
+    InvalidOracle,
 }

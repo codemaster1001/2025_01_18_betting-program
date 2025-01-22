@@ -1,19 +1,24 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { Keypair, LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
+import { Keypair, LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction } from "@solana/web3.js";
 import { BN } from "bn.js";
 import { assert } from "chai";
 import { BettingProgram } from "../target/types/betting_program";
-import { confirmTransaction } from "@solana-developers/helpers";
 
+//mainnet
+// const FEED1 = new PublicKey("Ceveqpim1FJZfx9DPeFDVDSz2HJavUqPPEJtZ2osNEmS");
+// const FEED2 = new PublicKey("Hg8Kz1NaG3mnzJ34nzMRwTXByLTG1wrFnW4AgMfynoFz");
+
+//devnet
+const FEED1 = new PublicKey("DHB2Ph8CK7PmR3xswqcmDkgQeucnwSZtfnMpnc7mQgkb");
+const FEED2 = new PublicKey("J9nrFWjDUeDVZ4BhhxsbQXWgLcLEgQyNBrCbwSADmJdr");
 
 describe("Test Hilo Market", async () => {
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
     const payer = anchor.Wallet.local().payer;
     const program = anchor.workspace.BettingProgram as Program<BettingProgram>;
-    const SOL_FEED = new PublicKey("Ceveqpim1FJZfx9DPeFDVDSz2HJavUqPPEJtZ2osNEmS");
-    const marketId = "1"
+    const marketId = "12"
     const [marketPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("market"), Buffer.from(marketId)],
         program.programId
@@ -24,9 +29,20 @@ describe("Test Hilo Market", async () => {
         Buffer.from("bet"), user.publicKey.toBuffer(), marketPda.toBuffer()
     ], program.programId)
     const winningOutcome = 0;
+    beforeEach(async () => {
+        const latestBlockhash = await provider.connection.getLatestBlockhash("processed")
+        const transferTx = new Transaction().add(SystemProgram.transfer({
+            fromPubkey: admin.publicKey,
+            toPubkey: user.publicKey,
+            lamports: 0.5 * LAMPORTS_PER_SOL
+        }))
+        transferTx.feePayer = admin.publicKey;
+        transferTx.recentBlockhash = latestBlockhash.blockhash;
+        await sendAndConfirmTransaction(provider.connection, transferTx, [admin])
+    })
     it("Create Hilo Market", async () => {
-        const airdropTxId = await provider.connection.requestAirdrop(user.publicKey, 5 * LAMPORTS_PER_SOL)
-        await confirmTransaction(provider.connection, airdropTxId, "processed")
+        // const airdropTxId = await provider.connection.requestAirdrop(user.publicKey, 5 * LAMPORTS_PER_SOL)
+        // await confirmTransaction(provider.connection, airdropTxId, "processed")
         const createMarketArgs = {
             id: marketId,
             title: "SOL Hilo",
@@ -37,7 +53,7 @@ describe("Test Hilo Market", async () => {
             closeTime: new BN(Math.floor(Date.now() / 1000) + 3600),
             settleTime: new BN(Math.floor(Date.now() / 1000) + 7200),
             serviceFeeBps: 500,
-            minBet: new BN(1 * LAMPORTS_PER_SOL),
+            minBet: new BN(0.1 * LAMPORTS_PER_SOL),
             maxBet: new BN(10 * LAMPORTS_PER_SOL),
             totalMaxBet: new BN(100 * LAMPORTS_PER_SOL),
             outcomes: ["YES", "NO"]
@@ -56,7 +72,7 @@ describe("Test Hilo Market", async () => {
 
     it("Place Bet on Yes", async () => {
         const outcomeIndex = 0;
-        const amount = new BN(1 * LAMPORTS_PER_SOL);
+        const amount = new BN(0.1 * LAMPORTS_PER_SOL);
 
         const tx = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
             bet: betPda,
@@ -71,7 +87,7 @@ describe("Test Hilo Market", async () => {
 
     it("Place Bet on No", async () => {
         const outcomeIndex = 1;
-        const amount = new BN(1 * LAMPORTS_PER_SOL);
+        const amount = new BN(0.1 * LAMPORTS_PER_SOL);
         const tx = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
             bet: betPda,
             market: marketPda,
@@ -80,7 +96,7 @@ describe("Test Hilo Market", async () => {
         await sendAndConfirmTransaction(provider.connection, tx, [user])
         const betAccount = await program.account.bet.fetch(betPda)
         assert(betAccount.amountsPerOutcome[outcomeIndex].toString() == amount.toString())
-        assert(betAccount.totalBetAmount.toNumber() == 2 * LAMPORTS_PER_SOL)
+        assert(betAccount.totalBetAmount.toNumber() == amount.mul(new BN(2)).toNumber())
 
     })
 
@@ -102,7 +118,7 @@ describe("Test Hilo Market", async () => {
         const txId = await program.methods.settleMarket().accountsPartial({
             market: marketPda,
             authority: admin.publicKey,
-            feed1: SOL_FEED,
+            feed1: FEED1,
             feed2: null
         }).rpc();
         const marketAccount = await program.account.market.fetch(marketPda)
@@ -145,14 +161,14 @@ describe("Test Hilo Market", async () => {
     })
 })
 
+
 describe("Test TokenFight Market", async () => {
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
     const payer = anchor.Wallet.local().payer;
     const program = anchor.workspace.BettingProgram as Program<BettingProgram>;
-    const SOL_FEED = new PublicKey("Ceveqpim1FJZfx9DPeFDVDSz2HJavUqPPEJtZ2osNEmS");
-    const JSOL_FEED = new PublicKey("Hg8Kz1NaG3mnzJ34nzMRwTXByLTG1wrFnW4AgMfynoFz");
-    const marketId = "2"
+
+    const marketId = "13"
     const [marketPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("market"), Buffer.from(marketId)],
         program.programId
@@ -163,9 +179,20 @@ describe("Test TokenFight Market", async () => {
         Buffer.from("bet"), user.publicKey.toBuffer(), marketPda.toBuffer()
     ], program.programId)
     const winningOutcome = 0;
+    beforeEach(async () => {
+        const latestBlockhash = await provider.connection.getLatestBlockhash("processed")
+        const transferTx = new Transaction().add(SystemProgram.transfer({
+            fromPubkey: admin.publicKey,
+            toPubkey: user.publicKey,
+            lamports: 0.5 * LAMPORTS_PER_SOL
+        }))
+        transferTx.feePayer = admin.publicKey;
+        transferTx.recentBlockhash = latestBlockhash.blockhash;
+        await sendAndConfirmTransaction(provider.connection, transferTx, [admin])
+    })
     it("Create TokenFight Market", async () => {
-        const airdropTxId = await provider.connection.requestAirdrop(user.publicKey, 5 * LAMPORTS_PER_SOL)
-        await confirmTransaction(provider.connection, airdropTxId, "processed")
+        // const airdropTxId = await provider.connection.requestAirdrop(user.publicKey, 5 * LAMPORTS_PER_SOL)
+        // await confirmTransaction(provider.connection, airdropTxId, "processed")
         const createMarketArgs = {
             id: marketId,
             title: "SOL/JitoSol TokenFight",
@@ -176,7 +203,7 @@ describe("Test TokenFight Market", async () => {
             closeTime: new BN(Math.floor(Date.now() / 1000) + 3600),
             settleTime: new BN(Math.floor(Date.now() / 1000) + 7200),
             serviceFeeBps: 500,
-            minBet: new BN(1 * LAMPORTS_PER_SOL),
+            minBet: new BN(0.1 * LAMPORTS_PER_SOL),
             maxBet: new BN(10 * LAMPORTS_PER_SOL),
             totalMaxBet: new BN(100 * LAMPORTS_PER_SOL),
             outcomes: ["Sol", "JitoSol"]
@@ -195,7 +222,7 @@ describe("Test TokenFight Market", async () => {
 
     it("Place Bet on Sol", async () => {
         const outcomeIndex = 0;
-        const amount = new BN(1 * LAMPORTS_PER_SOL);
+        const amount = new BN(0.1 * LAMPORTS_PER_SOL);
         const tx = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
             bet: betPda,
             market: marketPda,
@@ -209,7 +236,7 @@ describe("Test TokenFight Market", async () => {
 
     it("Place Bet on JitoSol", async () => {
         const outcomeIndex = 1;
-        const amount = new BN(1 * LAMPORTS_PER_SOL);
+        const amount = new BN(0.1 * LAMPORTS_PER_SOL);
         const tx = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
             bet: betPda,
             market: marketPda,
@@ -218,7 +245,7 @@ describe("Test TokenFight Market", async () => {
         await sendAndConfirmTransaction(provider.connection, tx, [user])
         const betAccount = await program.account.bet.fetch(betPda)
         assert(betAccount.amountsPerOutcome[outcomeIndex].toString() == amount.toString())
-        assert(betAccount.totalBetAmount.toNumber() == 2 * LAMPORTS_PER_SOL)
+        assert(betAccount.totalBetAmount.toNumber() == amount.mul(new BN(2)).toNumber())
 
     })
 
@@ -226,8 +253,8 @@ describe("Test TokenFight Market", async () => {
         const txId = await program.methods.closeMarket().accountsPartial({
             market: marketPda,
             authority: admin.publicKey,
-            feed1: SOL_FEED,
-            feed2: JSOL_FEED
+            feed1: FEED1,
+            feed2: FEED2
         }).rpc();
         const marketAccount = await program.account.market.fetch(marketPda)
 
@@ -241,8 +268,8 @@ describe("Test TokenFight Market", async () => {
         const txId = await program.methods.settleMarket().accountsPartial({
             market: marketPda,
             authority: admin.publicKey,
-            feed1: SOL_FEED,
-            feed2: JSOL_FEED
+            feed1: FEED1,
+            feed2: FEED2
         }).rpc();
         const marketAccount = await program.account.market.fetch(marketPda)
 
@@ -290,8 +317,7 @@ describe("Test Custom Market", async () => {
     anchor.setProvider(provider);
     const payer = anchor.Wallet.local().payer;
     const program = anchor.workspace.BettingProgram as Program<BettingProgram>;
-    const SOL_FEED = new PublicKey("Ceveqpim1FJZfx9DPeFDVDSz2HJavUqPPEJtZ2osNEmS");
-    const marketId = "3"
+    const marketId = "14"
     const [marketPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("market"), Buffer.from(marketId)],
         program.programId
@@ -302,9 +328,20 @@ describe("Test Custom Market", async () => {
         Buffer.from("bet"), user.publicKey.toBuffer(), marketPda.toBuffer()
     ], program.programId)
     const winningOutcome = 0;
+    beforeEach(async () => {
+        const latestBlockhash = await provider.connection.getLatestBlockhash("processed")
+        const transferTx = new Transaction().add(SystemProgram.transfer({
+            fromPubkey: admin.publicKey,
+            toPubkey: user.publicKey,
+            lamports: 0.5 * LAMPORTS_PER_SOL
+        }))
+        transferTx.feePayer = admin.publicKey;
+        transferTx.recentBlockhash = latestBlockhash.blockhash;
+        await sendAndConfirmTransaction(provider.connection, transferTx, [admin])
+    })
     it("Create Custom Market", async () => {
-        const airdropTxId = await provider.connection.requestAirdrop(user.publicKey, 5 * LAMPORTS_PER_SOL)
-        await confirmTransaction(provider.connection, airdropTxId, "processed")
+        // const airdropTxId = await provider.connection.requestAirdrop(user.publicKey, 5 * LAMPORTS_PER_SOL)
+        // await confirmTransaction(provider.connection, airdropTxId, "processed")
         const createMarketArgs = {
             id: marketId,
             title: "Custom Market",
@@ -315,7 +352,7 @@ describe("Test Custom Market", async () => {
             closeTime: new BN(Math.floor(Date.now() / 1000) + 3600),
             settleTime: new BN(Math.floor(Date.now() / 1000) + 7200),
             serviceFeeBps: 500,
-            minBet: new BN(1 * LAMPORTS_PER_SOL),
+            minBet: new BN(0.1 * LAMPORTS_PER_SOL),
             maxBet: new BN(10 * LAMPORTS_PER_SOL),
             totalMaxBet: new BN(100 * LAMPORTS_PER_SOL),
             outcomes: ["<$5B", "$5-10B", "$10-15B", "$15-20B", "$20-25B", "$25B+"]
@@ -334,7 +371,7 @@ describe("Test Custom Market", async () => {
 
     it("Place Bet on <$5B", async () => {
         const outcomeIndex = 0;
-        const amount = new BN(1 * LAMPORTS_PER_SOL);
+        const amount = new BN(0.1 * LAMPORTS_PER_SOL);
         const tx = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
             bet: betPda,
             market: marketPda,
@@ -348,7 +385,7 @@ describe("Test Custom Market", async () => {
 
     it("Place Bet on $10-15B", async () => {
         const outcomeIndex = 2;
-        const amount = new BN(1 * LAMPORTS_PER_SOL);
+        const amount = new BN(0.1 * LAMPORTS_PER_SOL);
         const tx = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
             bet: betPda,
             market: marketPda,
@@ -357,7 +394,7 @@ describe("Test Custom Market", async () => {
         await sendAndConfirmTransaction(provider.connection, tx, [user])
         const betAccount = await program.account.bet.fetch(betPda)
         assert(betAccount.amountsPerOutcome[outcomeIndex].toString() == amount.toString())
-        assert(betAccount.totalBetAmount.toNumber() == 2 * LAMPORTS_PER_SOL)
+        assert(betAccount.totalBetAmount.toNumber() == amount.mul(new BN(2)).toNumber())
 
     })
 
