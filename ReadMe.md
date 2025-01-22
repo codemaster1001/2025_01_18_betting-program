@@ -15,8 +15,6 @@ Below, we demonstrate:
 
 Each market has various configurations, including **Hilo**, **TokenFight**, or **Custom** market types.
 
-> **Note**: This example uses [Mocha](https://mochajs.org/) for testing and [chai](https://www.chaijs.com/) for assertions, but the same function calls and transaction flows will apply in your production environment.
-
 ---
 
 ### Table of Contents
@@ -27,10 +25,11 @@ Each market has various configurations, including **Hilo**, **TokenFight**, or *
 4. [Settling a Market](#settling-a-market)  
 5. [Setting the Winning Outcome](#setting-the-winning-outcome)  
 6. [Claiming Rewards](#claiming-rewards)  
-7. [Example Test Suites](#example-test-suites)  
 
 
 ## Creating a Market
+
+Only admin can call this function
 
 Use createMarket to open a new market. You need the following arguments:
 
@@ -54,6 +53,8 @@ To place a bet, call placeBet with:
 
 ## Closing a Market
 
+Only admin can call this function
+
 closeMarket prevents new bets from being placed. Typically called by the admin (authority) when it’s time to stop new bets.
 
 -In TokenFight Market, you should pass both feed1 and feed2 addresses you can find on the [On-Demand Switchboard](https://ondemand.switchboard.xyz/solana/mainnet).
@@ -61,11 +62,15 @@ closeMarket prevents new bets from being placed. Typically called by the admin (
 
 ## Settling a Market
 
+Only admin can call this function
+
 settleMarket updates the final or official data (like final price) from oracles. After this step, the outcome can be decided.
 -In TokenFight Market, you should pass both feed1 and feed2 addresses you can find on the [On-Demand Switchboard](https://ondemand.switchboard.xyz/solana/mainnet).
 -In Hilo market, you should pass feed1 address to fetch the Oracle price
 
 ## Setting the Winning Outcome
+
+Only admin can call this function
 
 After you have final data, you call setWinningOutcome to declare which outcome index has won.
 
