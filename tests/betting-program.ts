@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { Keypair, LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
 import { BN } from "bn.js";
 import { assert } from "chai";
 import { BettingProgram } from "../target/types/betting_program";
@@ -46,7 +46,7 @@ describe("Test Hilo Market", async () => {
         const txId = await program.methods.createMarket(createMarketArgs).accountsPartial({
             market: marketPda,
             authority: admin.publicKey,
-        }).signers([admin]).rpc()
+        }).rpc()
 
         const marketAccount = await program.account.market.fetch(marketPda)
         assert(marketAccount.id == createMarketArgs.id)
@@ -58,11 +58,12 @@ describe("Test Hilo Market", async () => {
         const outcomeIndex = 0;
         const amount = new BN(1 * LAMPORTS_PER_SOL);
 
-        const txId = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
+        const tx = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
             bet: betPda,
             market: marketPda,
             user: user.publicKey
-        }).signers([user]).rpc();
+        }).signers([user]).transaction();
+        await sendAndConfirmTransaction(provider.connection, tx, [user])
         const betAccount = await program.account.bet.fetch(betPda)
         assert(betAccount.totalBetAmount.toString() == amount.toString())
         assert(betAccount.amountsPerOutcome[outcomeIndex].toString() == amount.toString())
@@ -71,11 +72,12 @@ describe("Test Hilo Market", async () => {
     it("Place Bet on No", async () => {
         const outcomeIndex = 1;
         const amount = new BN(1 * LAMPORTS_PER_SOL);
-        const txId = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
+        const tx = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
             bet: betPda,
             market: marketPda,
             user: user.publicKey
-        }).signers([user]).rpc();
+        }).signers([user]).transaction();
+        await sendAndConfirmTransaction(provider.connection, tx, [user])
         const betAccount = await program.account.bet.fetch(betPda)
         assert(betAccount.amountsPerOutcome[outcomeIndex].toString() == amount.toString())
         assert(betAccount.totalBetAmount.toNumber() == 2 * LAMPORTS_PER_SOL)
@@ -88,7 +90,7 @@ describe("Test Hilo Market", async () => {
             authority: admin.publicKey,
             feed1: null,
             feed2: null
-        }).signers([admin]).rpc();
+        }).rpc();
         const marketAccount = await program.account.market.fetch(marketPda)
 
         console.log(`ClosedPrice`, marketAccount.finalPriceAClosed);
@@ -102,7 +104,7 @@ describe("Test Hilo Market", async () => {
             authority: admin.publicKey,
             feed1: SOL_FEED,
             feed2: null
-        }).signers([admin]).rpc();
+        }).rpc();
         const marketAccount = await program.account.market.fetch(marketPda)
 
         console.log(`SettledPrice`, marketAccount.finalPriceASettled);
@@ -115,7 +117,7 @@ describe("Test Hilo Market", async () => {
         const txId = await program.methods.setWinningOutcome(winningOutcome).accountsPartial({
             market: marketPda,
             authority: admin.publicKey,
-        }).signers([admin]).rpc();
+        }).rpc();
         const marketAccount = await program.account.market.fetch(marketPda)
 
         console.log(`Market Status`, marketAccount.status);
@@ -126,12 +128,13 @@ describe("Test Hilo Market", async () => {
     it("Claim reward", async () => {
         const beforeUserBalance = (await provider.connection.getBalance(user.publicKey, "processed"))
         const beforeAdminBalance = await provider.connection.getBalance(admin.publicKey, "processed")
-        const txId = await program.methods.claimReward().accountsPartial({
+        const tx = await program.methods.claimReward().accountsPartial({
             market: marketPda,
             bet: betPda,
             user: user.publicKey,
             authority: admin.publicKey,
-        }).signers([user]).rpc();
+        }).signers([user]).transaction();
+        await sendAndConfirmTransaction(provider.connection, tx, [user])
         const afterUserBalance = await provider.connection.getBalance(user.publicKey, "processed")
         const afterAdminBalance = await provider.connection.getBalance(admin.publicKey, "processed")
         const marketAccount = await program.account.market.fetch(marketPda)
@@ -182,7 +185,7 @@ describe("Test TokenFight Market", async () => {
         const txId = await program.methods.createMarket(createMarketArgs).accountsPartial({
             market: marketPda,
             authority: admin.publicKey,
-        }).signers([admin]).rpc()
+        }).rpc()
 
         const marketAccount = await program.account.market.fetch(marketPda)
         assert(marketAccount.id == createMarketArgs.id)
@@ -193,12 +196,12 @@ describe("Test TokenFight Market", async () => {
     it("Place Bet on Sol", async () => {
         const outcomeIndex = 0;
         const amount = new BN(1 * LAMPORTS_PER_SOL);
-
-        const txId = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
+        const tx = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
             bet: betPda,
             market: marketPda,
             user: user.publicKey
-        }).signers([user]).rpc();
+        }).signers([user]).transaction();
+        await sendAndConfirmTransaction(provider.connection, tx, [user])
         const betAccount = await program.account.bet.fetch(betPda)
         assert(betAccount.totalBetAmount.toString() == amount.toString())
         assert(betAccount.amountsPerOutcome[outcomeIndex].toString() == amount.toString())
@@ -207,11 +210,12 @@ describe("Test TokenFight Market", async () => {
     it("Place Bet on JitoSol", async () => {
         const outcomeIndex = 1;
         const amount = new BN(1 * LAMPORTS_PER_SOL);
-        const txId = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
+        const tx = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
             bet: betPda,
             market: marketPda,
             user: user.publicKey
-        }).signers([user]).rpc();
+        }).signers([user]).transaction();
+        await sendAndConfirmTransaction(provider.connection, tx, [user])
         const betAccount = await program.account.bet.fetch(betPda)
         assert(betAccount.amountsPerOutcome[outcomeIndex].toString() == amount.toString())
         assert(betAccount.totalBetAmount.toNumber() == 2 * LAMPORTS_PER_SOL)
@@ -224,7 +228,7 @@ describe("Test TokenFight Market", async () => {
             authority: admin.publicKey,
             feed1: SOL_FEED,
             feed2: JSOL_FEED
-        }).signers([admin]).rpc();
+        }).rpc();
         const marketAccount = await program.account.market.fetch(marketPda)
 
         console.log(`finalPriceAClosed`, marketAccount.finalPriceAClosed);
@@ -239,7 +243,7 @@ describe("Test TokenFight Market", async () => {
             authority: admin.publicKey,
             feed1: SOL_FEED,
             feed2: JSOL_FEED
-        }).signers([admin]).rpc();
+        }).rpc();
         const marketAccount = await program.account.market.fetch(marketPda)
 
         console.log(`finalPriceASettled`, marketAccount.finalPriceASettled);
@@ -253,7 +257,7 @@ describe("Test TokenFight Market", async () => {
         const txId = await program.methods.setWinningOutcome(winningOutcome).accountsPartial({
             market: marketPda,
             authority: admin.publicKey,
-        }).signers([admin]).rpc();
+        }).rpc();
         const marketAccount = await program.account.market.fetch(marketPda)
 
         console.log(`Market Status`, marketAccount.status);
@@ -264,12 +268,13 @@ describe("Test TokenFight Market", async () => {
     it("Claim reward", async () => {
         const beforeUserBalance = (await provider.connection.getBalance(user.publicKey, "processed"))
         const beforeAdminBalance = await provider.connection.getBalance(admin.publicKey, "processed")
-        const txId = await program.methods.claimReward().accountsPartial({
+        const tx = await program.methods.claimReward().accountsPartial({
             market: marketPda,
             bet: betPda,
             user: user.publicKey,
             authority: admin.publicKey,
-        }).signers([user]).rpc();
+        }).signers([user]).transaction();
+        await sendAndConfirmTransaction(provider.connection, tx, [user])
         const afterUserBalance = await provider.connection.getBalance(user.publicKey, "processed")
         const afterAdminBalance = await provider.connection.getBalance(admin.publicKey, "processed")
         const marketAccount = await program.account.market.fetch(marketPda)
@@ -296,7 +301,7 @@ describe("Test Custom Market", async () => {
     const [betPda] = PublicKey.findProgramAddressSync([
         Buffer.from("bet"), user.publicKey.toBuffer(), marketPda.toBuffer()
     ], program.programId)
-    const winningOutcome = 1;
+    const winningOutcome = 0;
     it("Create Custom Market", async () => {
         const airdropTxId = await provider.connection.requestAirdrop(user.publicKey, 5 * LAMPORTS_PER_SOL)
         await confirmTransaction(provider.connection, airdropTxId, "processed")
@@ -319,7 +324,7 @@ describe("Test Custom Market", async () => {
         const txId = await program.methods.createMarket(createMarketArgs).accountsPartial({
             market: marketPda,
             authority: admin.publicKey,
-        }).signers([admin]).rpc()
+        }).rpc()
 
         const marketAccount = await program.account.market.fetch(marketPda)
         assert(marketAccount.id == createMarketArgs.id)
@@ -330,12 +335,12 @@ describe("Test Custom Market", async () => {
     it("Place Bet on <$5B", async () => {
         const outcomeIndex = 0;
         const amount = new BN(1 * LAMPORTS_PER_SOL);
-
-        const txId = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
+        const tx = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
             bet: betPda,
             market: marketPda,
             user: user.publicKey
-        }).signers([user]).rpc();
+        }).signers([user]).transaction();
+        await sendAndConfirmTransaction(provider.connection, tx, [user])
         const betAccount = await program.account.bet.fetch(betPda)
         assert(betAccount.totalBetAmount.toString() == amount.toString())
         assert(betAccount.amountsPerOutcome[outcomeIndex].toString() == amount.toString())
@@ -344,11 +349,12 @@ describe("Test Custom Market", async () => {
     it("Place Bet on $10-15B", async () => {
         const outcomeIndex = 2;
         const amount = new BN(1 * LAMPORTS_PER_SOL);
-        const txId = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
+        const tx = await program.methods.placeBet(outcomeIndex, amount).accountsPartial({
             bet: betPda,
             market: marketPda,
             user: user.publicKey
-        }).signers([user]).rpc();
+        }).signers([user]).transaction();
+        await sendAndConfirmTransaction(provider.connection, tx, [user])
         const betAccount = await program.account.bet.fetch(betPda)
         assert(betAccount.amountsPerOutcome[outcomeIndex].toString() == amount.toString())
         assert(betAccount.totalBetAmount.toNumber() == 2 * LAMPORTS_PER_SOL)
@@ -361,7 +367,7 @@ describe("Test Custom Market", async () => {
             authority: admin.publicKey,
             feed1: null,
             feed2: null
-        }).signers([admin]).rpc();
+        }).rpc();
         const marketAccount = await program.account.market.fetch(marketPda)
         console.log(`Market Status`, marketAccount.status);
         assert(marketAccount.status.closed)
@@ -373,7 +379,7 @@ describe("Test Custom Market", async () => {
             authority: admin.publicKey,
             feed1: null,
             feed2: null
-        }).signers([admin]).rpc();
+        }).rpc();
         const marketAccount = await program.account.market.fetch(marketPda)
         console.log(`Market Status`, marketAccount.status);
         assert(marketAccount.status.settled)
@@ -384,7 +390,7 @@ describe("Test Custom Market", async () => {
         const txId = await program.methods.setWinningOutcome(winningOutcome).accountsPartial({
             market: marketPda,
             authority: admin.publicKey,
-        }).signers([admin]).rpc();
+        }).rpc();
         const marketAccount = await program.account.market.fetch(marketPda)
 
         console.log(`Market Status`, marketAccount.status);
@@ -395,12 +401,13 @@ describe("Test Custom Market", async () => {
     it("Claim reward", async () => {
         const beforeUserBalance = (await provider.connection.getBalance(user.publicKey, "processed"))
         const beforeAdminBalance = await provider.connection.getBalance(admin.publicKey, "processed")
-        const txId = await program.methods.claimReward().accountsPartial({
+        const tx = await program.methods.claimReward().accountsPartial({
             market: marketPda,
             bet: betPda,
             user: user.publicKey,
             authority: admin.publicKey,
-        }).signers([user]).rpc({ commitment: "processed" });
+        }).signers([user]).transaction();
+        await sendAndConfirmTransaction(provider.connection, tx, [user])
         const afterUserBalance = await provider.connection.getBalance(user.publicKey, "processed")
         const afterAdminBalance = await provider.connection.getBalance(admin.publicKey, "processed")
         const marketAccount = await program.account.market.fetch(marketPda)

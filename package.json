@@ -1,8 +1,9 @@
 {
   "license": "ISC",
   "scripts": {
-    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+    "local-validator": "solana-test-validator --clone Ceveqpim1FJZfx9DPeFDVDSz2HJavUqPPEJtZ2osNEmS Hg8Kz1NaG3mnzJ34nzMRwTXByLTG1wrFnW4AgMfynoFz --reset --url https://solana-rpc.publicnode.com",
+    "deploy": "anchor build && anchor deploy -- --use-rpc",
+    "test": "anchor run test"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
